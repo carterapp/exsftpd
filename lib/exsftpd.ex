@@ -1,4 +1,7 @@
 defmodule Exsftpd do
+  use Application
+  require Logger
+
   def status() do
     Exsftpd.Server.status(Exsftpd.Server)
   end
@@ -14,5 +17,10 @@ defmodule Exsftpd do
 
   def start_daemon() do
     Exsftpd.Server.start_daemon(Exsftpd.Server)
+  end
+
+  def start(_type, _args) do
+    Logger.info("Starting SFTP daemon")
+    Exsftpd.Supervisor.start_link()
   end
 end
