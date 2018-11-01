@@ -1,23 +1,13 @@
 defmodule Exsftpd do
-  @moduledoc """
-  Documentation for Exsftp.
-  """
+  def status() do
+    Exsftpd.Server.status(Exsftpd.Server)
+  end
 
-  def init do
-    :ssh.start()
+  def stop_daemon() do
+    Exsftpd.Server.stop_daemon(Exsftpd.Server)
+  end
 
-    {:ok, _ref} =
-      :ssh.daemon(2220,
-        system_dir: '/tmp/ssh',
-        shell: fn _ -> {:ok, 'Bye'} end,
-        subsystems: [
-          Exsftpd.SftpdChannel.subsystem_spec(
-            file_handler: {Exsftpd.SftpFileHandler, []}
-          )
-        ],
-        user_dir_fun: fn user ->
-          "/tmp/#{user}/.ssh"
-        end
-      )
+  def start_daemon() do
+    Exsftpd.Server.start_daemon(Exsftpd.Server)
   end
 end
