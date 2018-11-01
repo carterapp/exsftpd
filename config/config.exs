@@ -22,10 +22,13 @@ use Mix.Config
 #
 
 config :exsftpd, Exsftpd.Server,
-port: 2220,
-user_root_dir: "/tmp/users/files",
-user_auth_dir: "/tmp/users",
-system_dir: "/tmp/ssh"
+  port: 2220,
+  #root dir for <someuser>: /tmp/users/files/<someuser>
+  user_root_dir: "/tmp/users/files",
+  #look for authorized_keys at /tmp/users/<username>/.ssh
+  user_auth_dir: "/tmp/users",
+  #Where to look for ssh host keys
+  system_dir: "/tmp/ssh"
 
 
 # It is also possible to import configuration files, relative to this

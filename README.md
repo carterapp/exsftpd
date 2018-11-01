@@ -1,11 +1,12 @@
 # Exsftpd
 
-**TODO: Add description**
+SFTP server which do not allow shell access and has a separate root directory
+for each user.
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `exsftpd` to your list of dependencies in `mix.exs`:
+The package can be installed by adding `exsftpd` to your list of dependencies in
+`mix.exs`:
 
 ```elixir
 def deps do
@@ -13,6 +14,18 @@ def deps do
     {:exsftpd, "~> 0.1.0"}
   ]
 end
+```
+
+Next add a configuration entry for `:exsftpd, Exsftpd.Server`:
+```
+config :exsftpd, Exsftpd.Server,
+  port: 2220,
+  #root dir for <someuser>: /tmp/users/files/<someuser>
+  user_root_dir: "/tmp/users/files",
+  #look for authorized_keys at /tmp/users/<username>/.ssh
+  user_auth_dir: "/tmp/users",
+  #Where to look for ssh host keys
+  system_dir: "/tmp/ssh"
 ```
 
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
