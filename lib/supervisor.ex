@@ -7,7 +7,7 @@ defmodule Exsftpd.Supervisor do
 
   def init(:ok) do
     children = [
-      worker(Exsftpd.Server, [Exsftpd.Server, Application.get_env(:exsftpd, Exsftpd.Server)])
+      worker(Exsftpd.Server, [[]])
     ]
     supervise(children, strategy: :one_for_one)
 
