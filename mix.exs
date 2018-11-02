@@ -7,7 +7,7 @@ defmodule Exsftpd.MixProject do
       description: description(),
       version: "0.2.0",
       elixir: "~> 1.7",
-      build_embedded: Mix.env == :prod,
+      build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       package: package()
@@ -18,10 +18,18 @@ defmodule Exsftpd.MixProject do
     "SFTP server with separate root directories for each user"
   end
 
+  def module() do
+    if Mix.env() == :test do
+      []
+    else
+      {Exsftpd, []}
+    end
+  end
+
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      mod: {Exsftpd, []},
+      mod: module(),
       extra_applications: [:logger, :ssh]
     ]
   end
@@ -34,6 +42,7 @@ defmodule Exsftpd.MixProject do
       {:ex_doc, ">= 0.0.0", only: :dev}
     ]
   end
+
   defp package() do
     [
       # This option is only needed when you don't want to use the OTP application name
