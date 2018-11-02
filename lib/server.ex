@@ -30,6 +30,13 @@ defmodule Exsftpd.Server do
   end
 
   @doc """
+  Stop daemon
+  """
+  def start_daemon(pid, options) do
+    GenServer.cast(pid, {:start_daemon, options})
+  end
+
+  @doc """
   Daemon status
   """
   def status(pid) do
@@ -73,37 +80,48 @@ defmodule Exsftpd.Server do
 
   defp user_auth_dir(env) do
     if !env[:user_auth_dir] && !env[:user_root_dir] do
-      raise "Missing user_root_dir"
+      raise "Missing user_root_dir or user_auth_dir"
     end
 
     fn user ->
-      dir = env[:user_auth_dir] || env[:user_root_dir]
-      "#{dir}/#{user}/.ssh"
+      dir_or_fun = env[:user_auth_dir] || env[:user_root_dir]
+
+      if is_function(dir_or_fun) do
+        dir_or_fun.(user)
+      else
+        "#{dir_or_fun}/#{user}/.ssh"
+      end
     end
   end
 
   defp init_daemon() do
     env = Application.get_env(:exsftpd, Exsftpd.Server)
+    init_daemon(env)
+  end
 
-    :ssh.daemon(env[:port],
-      system_dir: system_dir(env),
-      shell: &dummy_shell/2,
-      subsystems: [
-        Exsftpd.SftpdChannel.subsystem_spec(
-          file_handler: {Exsftpd.SftpFileHandler, [user_root_dir: user_root_dir(env)]},
-          cwd: '/'
-        )
-      ],
-      user_dir_fun: user_auth_dir(env)
-    )
+  defp init_daemon(env) do
+    {:ok, ref} =
+      :ssh.daemon(env[:port],
+        system_dir: system_dir(env),
+        shell: &dummy_shell/2,
+        subsystems: [
+          Exsftpd.SftpdChannel.subsystem_spec(
+            file_handler: {Exsftpd.SftpFileHandler, [user_root_dir: user_root_dir(env)]},
+            cwd: '/'
+          )
+        ],
+        user_dir_fun: user_auth_dir(env)
+      )
+
+    {:ok, ref, env}
   end
 
   def init(options) do
     :ok = :ssh.start()
 
-    {:ok, ref} = init_daemon()
+    {:ok, ref, env} = init_daemon()
 
-    {:ok, %{daemon_ref: ref, options: options}}
+    {:ok, %{daemon_ref: ref, options: options, env: env}}
   end
 
   def handle_call({:state}, _from, state) do
@@ -126,6 +144,12 @@ defmodule Exsftpd.Server do
 
   def handle_cast({:start_daemon}, state) do
     {:ok, ref} = init_daemon()
+    new_state = Map.put(state, :daemon_ref, ref)
+    {:noreply, new_state}
+  end
+
+  def handle_cast({:start_daemon, options}, state) do
+    {:ok, ref} = init_daemon(options)
     new_state = Map.put(state, :daemon_ref, ref)
     {:noreply, new_state}
   end

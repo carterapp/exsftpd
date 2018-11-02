@@ -33,7 +33,15 @@ defmodule Exsftpd.SftpdChannel do
 
       xf = ssh_xfer(state[:xf])
       [user: username] = :ssh.connection_info(xf[:cm], [:user])
-      root_path = "#{user_root_dir}/#{username}"
+
+      root_path =
+        if is_function(user_root_dir) do
+          user_root_dir.(username)
+        else
+          "#{user_root_dir}/#{username}"
+        end
+
+      #make sure directory exists
       :file.make_dir(root_path)
 
       file_state
