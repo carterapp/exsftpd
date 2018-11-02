@@ -47,30 +47,54 @@ defmodule Exsftpd.Server do
     v && v |> String.to_charlist()
   end
 
-  defp dummy_shell(user) do
-    spawn(fn() ->
-      IO.puts("Hello, #{user}.")
+  defp dummy_shell(user, {ip, _port}) do
+    spawn(fn ->
+      remote_ip = ip |> Tuple.to_list() |> Enum.join(".")
+      IO.puts("Hello, #{user} from #{remote_ip}")
       IO.puts("No shell available for you here")
     end)
   end
 
+  defp system_dir(env) do
+    if !env[:system_dir] do
+      raise "Missing system_dir"
+    end
+
+    get_charlist(:system_dir, env)
+  end
+
+  defp user_root_dir(env) do
+    if !env[:user_root_dir] do
+      raise "Missing user_root_dir"
+    end
+
+    env[:user_root_dir]
+  end
+
+  defp user_auth_dir(env) do
+    if !env[:user_auth_dir] && !env[:user_root_dir] do
+      raise "Missing user_root_dir"
+    end
+
+    fn user ->
+      dir = env[:user_auth_dir] || env[:user_root_dir]
+      "#{dir}/#{user}/.ssh"
+    end
+  end
+
   defp init_daemon() do
     env = Application.get_env(:exsftpd, Exsftpd.Server)
-    :file.set_cwd("/tmp")
 
     :ssh.daemon(env[:port],
-      system_dir: get_charlist(:system_dir, env),
-      shell: &dummy_shell/1,
+      system_dir: system_dir(env),
+      shell: &dummy_shell/2,
       subsystems: [
         Exsftpd.SftpdChannel.subsystem_spec(
-          file_handler: {Exsftpd.SftpFileHandler, [user_root_dir: env[:user_root_dir]]},
+          file_handler: {Exsftpd.SftpFileHandler, [user_root_dir: user_root_dir(env)]},
           cwd: '/'
         )
       ],
-      user_dir_fun: fn user ->
-        dir = env[:user_auth_dir] || env[:user_root_dir]
-        "#{dir}/#{user}/.ssh"
-      end
+      user_dir_fun: user_auth_dir(env)
     )
   end
 
