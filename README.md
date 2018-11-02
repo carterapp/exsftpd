@@ -11,7 +11,7 @@ The package can be installed by adding `exsftpd` to your list of dependencies in
 ```elixir
 def deps do
   [
-    {:exsftpd, "~> 0.1.0"}
+    {:exsftpd, "~> 0.2.0"}
   ]
 end
 ```
