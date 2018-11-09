@@ -48,7 +48,7 @@ defmodule Exsftpd.MixProject do
       # This option is only needed when you don't want to use the OTP application name
       name: "exsftpd",
       licenses: ["Apache 2.0"],
-      links: %{"GitHub" => "https://github.com/jalpedersen/exsftpd"}
+      links: %{"GitHub" => "https://github.com/Codenaut/exsftpd"}
     ]
   end
 end
