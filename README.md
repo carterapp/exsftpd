@@ -1,5 +1,7 @@
 # Exsftpd
 
+[![Build Status](https://travis-ci.com/Codenaut/exsftpd.svg?branch=master)](https://travis-ci.com/Codenaut/exsftpd)
+
 SFTP server which do not allow shell access and has a separate root directory
 for each user.
 
