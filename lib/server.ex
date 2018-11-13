@@ -143,8 +143,10 @@ defmodule Exsftpd.Server do
   end
 
   def handle_cast({:start_daemon}, state) do
-    {:ok, ref, _} = init_daemon()
-    new_state = Map.put(state, :daemon_ref, ref)
+    {:ok, ref, env} = init_daemon()
+    new_state = state 
+                |> Map.put(:daemon_ref, ref)
+                |> Map.put(:env, env)
     {:noreply, new_state}
   end
 
