@@ -21,20 +21,10 @@ use Mix.Config
 #     config :logger, level: :info
 #
 
-config :exsftpd, Exsftpd.Server,
-  port: 2220,
-  #root dir for <username>: /tmp/users/<username>/files
-  user_root_dir: fn(user)->"/tmp/users/#{user}/files" end,
-  #look for authorized_keys at /tmp/users/<username>/.ssh
-  user_auth_dir: "/tmp/users",
-  #Where to look for ssh host keys
-  system_dir: "/tmp/ssh"
-
-
 # It is also possible to import configuration files, relative to this
 # directory. For example, you can emulate configuration per environment
 # by uncommenting the line below and defining dev.exs, test.exs and such.
 # Configuration from the imported file will override the ones defined
 # here (which is why it is important to import them last).
 #
-#     import_config "#{Mix.env()}.exs"
+import_config "#{Mix.env()}.exs"

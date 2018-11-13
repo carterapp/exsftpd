@@ -25,7 +25,7 @@ config :exsftpd, Exsftpd.Server,
 port: 2220,
 user_root_dir: "/tmp/users/files",
 user_auth_dir: "/tmp/users",
-system_dir: "/tmp/ssh"
+system_dir: "test/keys"
 
 
 # It is also possible to import configuration files, relative to this

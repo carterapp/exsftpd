@@ -3,6 +3,8 @@ defmodule ExsftpdTest do
   doctest Exsftpd
 
   setup do
+    root_dir = Application.get_env(:exsftpd, Exsftpd.Server)[:user_auth_dir]
+    :file.make_dir(root_dir)
     server = start_supervised!(Exsftpd.Server)
     %{server: server}
   end
