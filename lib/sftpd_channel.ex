@@ -23,6 +23,19 @@ defmodule Exsftpd.SftpdChannel do
     Enum.map(record, fn {_k, v} -> v end) |> Enum.into([:state]) |> List.to_tuple()
   end
 
+  def ensure_dir(path) do
+    Path.split(path)
+    |> Enum.reduce_while({:ok, ""}, fn (p, {_, parent}) ->
+      dir = "#{parent}/#{p}"
+      case :file.make_dir(dir) do
+        :ok -> {:cont, {:ok, dir}}
+        {:error, :eexist} -> {:cont, {:ok, dir}}
+        {:error, :eisdir} -> {:cont, {:ok, dir}}
+        other -> {:halt, other}
+      end
+    end)
+  end
+
   defp populate_file_state(state) do
     file_state = state[:file_state]
 
@@ -42,7 +55,7 @@ defmodule Exsftpd.SftpdChannel do
         end
 
       #make sure directory exists
-      :file.make_dir(root_path)
+      {:ok, _path} = ensure_dir(root_path)
 
       file_state
       |> List.keystore(:user, 0, {:user, username})
