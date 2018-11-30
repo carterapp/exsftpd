@@ -1,5 +1,8 @@
 use Mix.Config
 
+config :exsftpd, Exsftpd.Watcher,
+  handler: fn(event) -> IO.puts("Event: #{inspect event} ") end
+
 config :exsftpd, Exsftpd.Server,
   port: 2220,
   #root dir for <username>: /tmp/users/<username>/files
