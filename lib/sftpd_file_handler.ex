@@ -55,8 +55,12 @@ defmodule Exsftpd.SftpFileHandler do
   end
 
   def open(path, flags, state) do
-    on_event({:open, {path, flags}}, state)
-    {:file.open(user_path(path, state), flags), state}
+    {case :file.open(user_path(path, state), flags) do
+      {:ok, pid} ->
+        on_event({:open, {get_file_info(pid), path, flags}}, state)
+        {:ok, pid}
+      other -> other
+    end, state}
   end
 
   def position(io_device, offs, state) do
