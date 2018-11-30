@@ -10,6 +10,13 @@ defmodule Exsftpd.SftpFileHandler do
     Watcher.on_event({event_name, user, meta})
   end
 
+  defp after_event({event_name, meta}, state, result) do
+    user = state[:user]
+    Watcher.on_event({event_name, user, meta})
+    result
+  end
+
+
   defp get_file_info(io_device) do
     case :file.pid2name(io_device) do
       {:ok, filename} -> {io_device, filename}
@@ -18,18 +25,18 @@ defmodule Exsftpd.SftpFileHandler do
   end
 
   def close(io_device, state) do
-    on_event({:close, get_file_info(io_device)}, state)
-    {:file.close(io_device), state}
+    after_event({:close, get_file_info(io_device)}, state,
+                {:file.close(io_device), state})
   end
 
   def delete(path, state) do
-    on_event({:delete, path}, state)
-    {:file.delete(user_path(path, state)), state}
+    after_event({:delete, path}, state,
+                {:file.delete(user_path(path, state)), state})
   end
 
   def del_dir(path, state) do
-    on_event({:del_dir, path}, state)
-    {:file.del_dir(user_path(path, state)), state}
+    after_event({:del_dir, path}, state,
+                {:file.del_dir(user_path(path, state)), state})
   end
 
   def get_cwd(state) do
@@ -45,13 +52,13 @@ defmodule Exsftpd.SftpFileHandler do
   end
 
   def make_dir(dir, state) do
-    on_event({:make_dir, dir}, state)
-    {:file.make_dir(user_path(dir, state)), state}
+    after_event({:make_dir, dir}, state,
+                {:file.make_dir(user_path(dir, state)), state})
   end
 
   def make_symlink(path2, path, state) do
-    on_event({:make_symlink, {path2, path}}, state)
-    {:file.make_symlink(user_path(path2, state), user_path(path, state)), state}
+    after_event({:make_symlink, {path2, path}}, state,
+                {:file.make_symlink(user_path(path2, state), user_path(path, state)), state})
   end
 
   def open(path, flags, state) do
@@ -68,8 +75,8 @@ defmodule Exsftpd.SftpFileHandler do
   end
 
   def read(io_device, len, state) do
-    on_event({:read, get_file_info(io_device)}, state)
-    {:file.read(io_device, len), state}
+    after_event({:read, get_file_info(io_device)}, state,
+                {:file.read(io_device, len), state})
   end
 
   def read_link(path, state) do
@@ -85,17 +92,17 @@ defmodule Exsftpd.SftpFileHandler do
   end
 
   def rename(path, path2, state) do
-    on_event({:rename, {path, path2}}, state)
-    {:file.rename(user_path(path, state), user_path(path2, state)), state}
+    after_event({:rename, {path, path2}}, state,
+                {:file.rename(user_path(path, state), user_path(path2, state)), state})
   end
 
   def write(io_device, data, state) do
-    on_event({:write, get_file_info(io_device)}, state)
-    {:file.write(io_device, data), state}
+    after_event({:write, get_file_info(io_device)}, state,
+                {:file.write(io_device, data), state})
   end
 
   def write_file_info(path, info, state) do
-    on_event({:write_file_info, {path, info}}, state)
-    {:file.write_file_info(user_path(path, state), info), state}
+    after_event({:write_file_info, {path, info}}, state,
+                {:file.write_file_info(user_path(path, state), info), state})
   end
 end

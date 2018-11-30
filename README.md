@@ -13,7 +13,7 @@ The package can be installed by adding `exsftpd` to your list of dependencies in
 ```elixir
 def deps do
   [
-    {:exsftpd, "~> 0.5.0"}
+    {:exsftpd, "~> 0.6.0"}
   ]
 end
 ```
