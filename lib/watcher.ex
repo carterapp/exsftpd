@@ -15,7 +15,7 @@ defmodule Exsftpd.Watcher do
   end
 
   def handle_cast({:on_event, event}, state) do
-    handler = state[:handler]
+    handler = state[:event_handler]
     if handler do
       handler.(event)
     end

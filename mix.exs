@@ -5,7 +5,7 @@ defmodule Exsftpd.MixProject do
     [
       app: :exsftpd,
       description: description(),
-      version: "0.6.1",
+      version: "0.7.0",
       elixir: "~> 1.4 or ~> 1.5 or ~> 1.6 or ~> 1.7",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,

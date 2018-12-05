@@ -23,16 +23,9 @@ defmodule Exsftpd.Server do
   end
 
   @doc """
-  Stop daemon
+  Start daemon
   """
-  def start_daemon(pid) do
-    start_daemon(pid, get_default_env())
-  end
-
-  @doc """
-  Stop daemon
-  """
-  def start_daemon(pid, options) do
+  def start_daemon(pid, options \\ nil) do
     GenServer.cast(pid, {:start_daemon, options})
   end
 
@@ -94,10 +87,6 @@ defmodule Exsftpd.Server do
     end
   end
 
-  defp get_default_env() do
-    Application.get_env(:exsftpd, Exsftpd.Server)
-  end
-
   defp init_daemon(env) do
     Logger.info("Starting SFTP daemon on #{env[:port]}")
 
@@ -112,17 +101,17 @@ defmodule Exsftpd.Server do
                      ],
                      user_dir_fun: user_auth_dir(env)
     ) do
-      {:ok, ref} -> {:ok, ref, env}
+      {:ok, ref} -> {:ok, ref}
       any -> any
     end
   end
 
   def init(options) do
     :ok = :ssh.start()
-    case get_default_env() do
+    case options do
       nil -> {:ok, %{options: options}}
       env -> case init_daemon(env) do
-        {:ok, ref, env} -> {:ok, %{daemon_ref: ref, options: options, env: env}}
+        {:ok, ref} -> {:ok, %{daemon_ref: ref, options: options}}
         any -> any
       end
     end
@@ -133,7 +122,7 @@ defmodule Exsftpd.Server do
   end
 
   def handle_call({:status}, _from, state) do
-    if state[:daemon_ref] do
+    if state.daemon_ref do
       {:reply, :ssh.daemon_info(state.daemon_ref), state}
     else
       {:reply, {:error, :down}, state}
@@ -148,10 +137,9 @@ defmodule Exsftpd.Server do
 
 
   def handle_cast({:start_daemon, options}, state) do
-    {:ok, ref, env} = init_daemon(options)
+    {:ok, ref} = init_daemon(options || state.options)
     new_state = state
                 |> Map.put(:daemon_ref, ref)
-                |> Map.put(:env, env)
     {:noreply, new_state}
   end
 end

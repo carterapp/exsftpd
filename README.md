@@ -13,7 +13,7 @@ The package can be installed by adding `exsftpd` to your list of dependencies in
 ```elixir
 def deps do
   [
-    {:exsftpd, "~> 0.6.1"}
+    {:exsftpd, "~> 0.7.0"}
   ]
 end
 ```
@@ -27,10 +27,9 @@ config :exsftpd, Exsftpd.Server,
   #look for authorized_keys at /tmp/users/<username>/.ssh
   user_auth_dir: "/tmp/users",
   #Where to look for ssh host keys
-  system_dir: "/tmp/ssh"
+  system_dir: "/tmp/ssh",
+  event_handler: fn(event) -> IO.puts("Event: #{inspect event} ") end
 
-config :exsftpd, Exsftpd.Watcher,
-  handler: fn(event) -> IO.puts("Event: #{inspect event} ") end
 ```
 
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)

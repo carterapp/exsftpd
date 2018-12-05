@@ -6,10 +6,10 @@ defmodule Exsftpd.Supervisor do
   end
 
   def init(:ok) do
-    event_handler_options = Application.get_env(:exsftpd, Exsftpd.Watcher)
+    options = Application.get_env(:exsftpd, Exsftpd.Server)
     children = [
-      worker(Exsftpd.Server, [[]]),
-      worker(Exsftpd.Watcher, [event_handler_options])
+      worker(Exsftpd.Server, [options]),
+      worker(Exsftpd.Watcher, [options])
     ]
     supervise(children, strategy: :one_for_one)
 
