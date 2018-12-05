@@ -122,7 +122,7 @@ defmodule Exsftpd.Server do
   end
 
   def handle_call({:status}, _from, state) do
-    if state.daemon_ref do
+    if state[:daemon_ref] do
       {:reply, :ssh.daemon_info(state.daemon_ref), state}
     else
       {:reply, {:error, :down}, state}
