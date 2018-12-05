@@ -101,7 +101,9 @@ defmodule Exsftpd.Server do
                      ],
                      user_dir_fun: user_auth_dir(env)
     ) do
-      {:ok, ref} -> {:ok, ref}
+      {:ok, pid} -> 
+        Process.monitor(pid)
+        {:ok, pid}
       any -> any
     end
   end
@@ -115,6 +117,22 @@ defmodule Exsftpd.Server do
         any -> any
       end
     end
+  end
+
+  def handle_info({:DOWN, _ref, :process, pid, reason}, state) do
+    Logger.info("#{reason}")
+    if pid == state[:daemon_ref] do
+      case init_daemon(state.options) do
+        {:ok, pid} -> {:noreply, Map.put(state, :daemon_ref, pid)}
+        any -> Logger.error("Error: #{inspect any}")
+      end
+    else
+    {:noreply, state}
+    end
+  end
+
+  def handle_info(_msg, state) do
+    {:noreply, state}
   end
 
   def handle_call({:state}, _from, state) do
