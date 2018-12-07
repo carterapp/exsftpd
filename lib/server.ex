@@ -19,14 +19,14 @@ defmodule Exsftpd.Server do
   Stop daemon
   """
   def stop_daemon(pid, options \\ nil) do
-    GenServer.cast(pid, {:stop_daemon, options})
+    GenServer.call(pid, {:stop_daemon, options})
   end
 
   @doc """
   Start daemon
   """
   def start_daemon(pid, options \\ nil) do
-    GenServer.cast(pid, {:start_daemon, options})
+    GenServer.call(pid, {:start_daemon, options})
   end
 
   @doc """
@@ -176,17 +176,6 @@ defmodule Exsftpd.Server do
     daemons |> Enum.filter(&(&1.pid != pid))
   end
 
-  def handle_cast({:stop_daemon, options}, state) do
-    opts = options || state.options
-    daemon = find_daemon(state.daemons, opts)
-    if daemon do
-      Process.send(self(), {:stop_ssh_daemon, daemon.pid}, [])
-      {:noreply, state |> Map.put(:daemons, remove_daemon(state.daemons, daemon.pid))}
-    else
-      {:noreply, state}
-    end
-  end
-
 
   def handle_cast({:start_daemon, options}, state) do
     opts = options || state.options
@@ -196,6 +185,28 @@ defmodule Exsftpd.Server do
       any ->
         Logger.error("Failed to start daemon: #{inspect any}")
         {:noreply, state}
+    end
+  end
+
+  def handle_call({:stop_daemon, options}, _from, state) do
+    opts = options || state.options
+    daemon = find_daemon(state.daemons, opts)
+    if daemon do
+      Process.send(self(), {:stop_ssh_daemon, daemon.pid}, [])
+      {:reply, {:ok, daemon}, state |> Map.put(:daemons, remove_daemon(state.daemons, daemon.pid))}
+    else
+      {:reply, {:error, :down}, state}
+    end
+  end
+
+
+  def handle_call({:start_daemon, options}, _from, state) do
+    opts = options || state.options
+    case init_daemon(opts) do
+      {:ok, pid, ref, options} ->
+        {:reply, {:ok, pid}, state |> Map.put(:daemons, [%{pid: pid, ref: ref, options: options} | state.daemons]) }
+      any ->
+        {:reply, any, state}
     end
   end
 end

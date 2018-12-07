@@ -13,10 +13,10 @@ defmodule ExsftpdTest do
   test "lifecycle", %{server: server} do
     assert {:ok, _} = Exsftpd.Server.status(server)
 
-    assert :ok = Exsftpd.Server.stop_daemon(server)
+    assert {:ok, _} = Exsftpd.Server.stop_daemon(server)
     assert {:error, :down} = Exsftpd.Server.status(server)
 
-    assert :ok = Exsftpd.Server.start_daemon(server)
+    assert {:ok, _pid} = Exsftpd.Server.start_daemon(server)
     assert {:ok, _ref} = Exsftpd.Server.status(server)
   end
 end
