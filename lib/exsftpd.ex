@@ -2,8 +2,8 @@ defmodule Exsftpd do
   use Application
   require Logger
 
-  def status() do
-    Exsftpd.Server.status(Exsftpd.Server)
+  def status(options \\ nil) do
+    Exsftpd.Server.status(Exsftpd.Server, options)
   end
 
   def state() do

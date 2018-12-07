@@ -1,18 +1,18 @@
 defmodule Exsftpd.SftpFileHandler do
-  alias Exsftpd.Watcher
 
   defp user_path(path, state) do
     Path.join(state[:root_path], path)
   end
 
   defp on_event({event_name, meta}, state) do
-    user = state[:user]
-    Watcher.on_event({event_name, user, meta})
+    case state[:event_handler] do
+      nil -> nil
+      handler -> handler.({event_name, state[:user], meta})
+    end
   end
 
-  defp after_event({event_name, meta}, state, result) do
-    user = state[:user]
-    Watcher.on_event({event_name, user, meta})
+  defp after_event(param, state, result) do
+    on_event(param, state)
     result
   end
 
