@@ -20,7 +20,7 @@ defmodule Exsftpd.SftpdChannel do
   end
 
   defp to_record(record) do
-    Enum.map(record, fn {_k, v} -> v end) |> Enum.into([:state]) |> List.to_tuple()
+    Enum.map(record, fn {_k, v} -> v end) |> List.insert_at(0, :state) |> List.to_tuple()
   end
 
   def ensure_dir(path) do
