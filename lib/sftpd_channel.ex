@@ -25,8 +25,9 @@ defmodule Exsftpd.SftpdChannel do
 
   def ensure_dir(path) do
     Path.split(path)
-    |> Enum.reduce_while({:ok, ""}, fn (p, {_, parent}) ->
+    |> Enum.reduce_while({:ok, ""}, fn p, {_, parent} ->
       dir = "#{parent}/#{p}"
+
       case :file.make_dir(dir) do
         :ok -> {:cont, {:ok, dir}}
         {:error, :eexist} -> {:cont, {:ok, dir}}
@@ -56,7 +57,7 @@ defmodule Exsftpd.SftpdChannel do
           "#{user_root_dir}/#{username}"
         end
 
-      #make sure directory exists
+      # make sure directory exists
       {:ok, _path} = ensure_dir(root_path)
 
       file_state

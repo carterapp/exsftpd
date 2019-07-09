@@ -87,48 +87,81 @@ defmodule Exsftpd.Server do
     end
   end
 
+  defp authenticate(handler) do
+    fn username, password, peer_address, state ->
+      accepted =
+        case handler do
+          {module, fun} ->
+            apply(module, fun, [username, password, [peer_address: peer_address]])
+
+          fun ->
+            fun.(username, password, peer_address: peer_address)
+        end
+
+      {accepted, state}
+    end
+  end
+
   defp init_daemon(options) do
     Logger.info("Starting SFTP daemon on #{options[:port]}")
 
-    case :ssh.daemon(options[:port],
-                     system_dir: system_dir(options),
-                     shell: &dummy_shell/2,
-                     subsystems: [
-                       Exsftpd.SftpdChannel.subsystem_spec(
-                         file_handler: {Exsftpd.SftpFileHandler,
-                           [event_handler: options[:event_handler], user_root_dir: user_root_dir(options)]},
-                           cwd: '/'
-                       )
-                     ],
-                     user_dir_fun: user_auth_dir(options)
-    ) do
-      {:ok, pid} -> 
+    daemon_opts = [
+      system_dir: system_dir(options),
+      shell: &dummy_shell/2,
+      subsystems: [
+        Exsftpd.SftpdChannel.subsystem_spec(
+          file_handler:
+            {Exsftpd.SftpFileHandler,
+             [event_handler: options[:event_handler], user_root_dir: user_root_dir(options)]},
+          cwd: '/'
+        )
+      ],
+      user_dir_fun: user_auth_dir(options)
+    ]
+
+    daemon_opts =
+      case options[:authenticate] do
+        nil -> daemon_opts
+        handler -> Keyword.put(daemon_opts, :pwdfun, authenticate(handler))
+      end
+
+    case :ssh.daemon(options[:port], daemon_opts) do
+      {:ok, pid} ->
         ref = Process.monitor(pid)
         {:ok, pid, ref, options}
-      any -> any
+
+      any ->
+        any
     end
   end
 
   def init(options) do
     :ok = :ssh.start()
+
     case options do
-      nil -> {:ok, %{options: options, daemons: []}}
-      env -> case init_daemon(env) do
-        {:ok, pid, ref, options} ->
-          {:ok, %{options: options, daemons: [%{pid: pid, ref: ref, options: options}]}}
-        any -> any
-      end
+      nil ->
+        {:ok, %{options: options, daemons: []}}
+
+      env ->
+        case init_daemon(env) do
+          {:ok, pid, ref, options} ->
+            {:ok, %{options: options, daemons: [%{pid: pid, ref: ref, options: options}]}}
+
+          any ->
+            any
+        end
     end
   end
 
   def handle_info({:DOWN, _ref, :process, pid, _reason}, state) do
     daemon = find_daemon_by_pid(state.daemons, pid)
+
     if daemon do
-      Logger.info("Restarting SSH daemon: #{inspect daemon.options}")
+      Logger.info("Restarting SSH daemon: #{inspect(daemon.options)}")
       GenServer.cast(self(), {:start_daemon, daemon.options})
       {:noreply, state |> Map.put(:daemons, remove_daemon(state.daemons, pid))}
     else
-    {:noreply, state}
+      {:noreply, state}
     end
   end
 
@@ -148,6 +181,7 @@ defmodule Exsftpd.Server do
   def handle_call({:status, options}, _from, state) do
     opts = options || state.options
     daemon = find_daemon(state.daemons, opts)
+
     if daemon do
       {:reply, :ssh.daemon_info(daemon.pid), state}
     else
@@ -155,12 +189,39 @@ defmodule Exsftpd.Server do
     end
   end
 
+  def handle_call({:stop_daemon, options}, _from, state) do
+    opts = options || state.options
+    daemon = find_daemon(state.daemons, opts)
+
+    if daemon do
+      Process.send(self(), {:stop_ssh_daemon, daemon.pid}, [])
+
+      {:reply, {:ok, daemon},
+       state |> Map.put(:daemons, remove_daemon(state.daemons, daemon.pid))}
+    else
+      {:reply, {:error, :down}, state}
+    end
+  end
+
+  def handle_call({:start_daemon, options}, _from, state) do
+    opts = options || state.options
+
+    case init_daemon(opts) do
+      {:ok, pid, ref, options} ->
+        {:reply, {:ok, pid},
+         state |> Map.put(:daemons, [%{pid: pid, ref: ref, options: options} | state.daemons])}
+
+      any ->
+        {:reply, any, state}
+    end
+  end
+
   def terminate(_reason, state) do
-    state.daemons |> Enum.each(fn(d) ->
+    state.daemons
+    |> Enum.each(fn d ->
       :ssh.stop_daemon(d.pid)
     end)
   end
-
 
   def find_daemon(daemons, opts) do
     port = opts[:port]
@@ -171,42 +232,21 @@ defmodule Exsftpd.Server do
     daemons |> Enum.find(&(&1.pid == pid))
   end
 
-
   defp remove_daemon(daemons, pid) do
     daemons |> Enum.filter(&(&1.pid != pid))
   end
 
-
   def handle_cast({:start_daemon, options}, state) do
     opts = options || state.options
+
     case init_daemon(opts) do
       {:ok, pid, ref, options} ->
-        {:noreply, state |> Map.put(:daemons, [%{pid: pid, ref: ref, options: options} | state.daemons]) }
+        {:noreply,
+         state |> Map.put(:daemons, [%{pid: pid, ref: ref, options: options} | state.daemons])}
+
       any ->
-        Logger.error("Failed to start daemon: #{inspect any}")
+        Logger.error("Failed to start daemon: #{inspect(any)}")
         {:noreply, state}
-    end
-  end
-
-  def handle_call({:stop_daemon, options}, _from, state) do
-    opts = options || state.options
-    daemon = find_daemon(state.daemons, opts)
-    if daemon do
-      Process.send(self(), {:stop_ssh_daemon, daemon.pid}, [])
-      {:reply, {:ok, daemon}, state |> Map.put(:daemons, remove_daemon(state.daemons, daemon.pid))}
-    else
-      {:reply, {:error, :down}, state}
-    end
-  end
-
-
-  def handle_call({:start_daemon, options}, _from, state) do
-    opts = options || state.options
-    case init_daemon(opts) do
-      {:ok, pid, ref, options} ->
-        {:reply, {:ok, pid}, state |> Map.put(:daemons, [%{pid: pid, ref: ref, options: options} | state.daemons]) }
-      any ->
-        {:reply, any, state}
     end
   end
 end

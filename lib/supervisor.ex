@@ -7,11 +7,11 @@ defmodule Exsftpd.Supervisor do
 
   def init(:ok) do
     options = Application.get_env(:exsftpd, Exsftpd.Server)
+
     children = [
       {Exsftpd.Server, options}
     ]
+
     Supervisor.init(children, strategy: :one_for_one)
-
   end
-
 end

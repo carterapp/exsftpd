@@ -22,11 +22,14 @@ use Mix.Config
 #
 
 config :exsftpd, Exsftpd.Server,
-port: 2220,
-user_root_dir: "/tmp/users/files",
-user_auth_dir: "/tmp/users",
-system_dir: "test/keys"
+  port: 2220,
+  user_root_dir: "/tmp/users/files",
+  user_auth_dir: "/tmp/users",
+  system_dir: "test/keys",
+  authenticate: {Exsftpd.Authenticator, :accept_all},
+  event_handler: {Exsftpd.Events, :log_event}
 
+# event_handler: fn(event) -> IO.puts("Event: #{inspect event} ") end
 
 # It is also possible to import configuration files, relative to this
 # directory. For example, you can emulate configuration per environment
