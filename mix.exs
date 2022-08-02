@@ -5,7 +5,7 @@ defmodule Exsftpd.MixProject do
     [
       app: :exsftpd,
       description: description(),
-      version: "0.9.0",
+      version: "0.10.0",
       elixir: "~> 1.4 or ~> 1.5 or ~> 1.6 or ~> 1.7 or ~> 1.8 or ~> 1.9",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
@@ -37,7 +37,7 @@ defmodule Exsftpd.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ex_doc, ">= 0.0.0", only: :dev}
+      {:ex_doc, ">= 0.0.0", only: [:dev, :release]}
     ]
   end
 
@@ -45,7 +45,7 @@ defmodule Exsftpd.MixProject do
     [
       # This option is only needed when you don't want to use the OTP application name
       name: "exsftpd",
-      licenses: ["Apache 2.0"],
+      licenses: ["Apache-2.0"],
       links: %{"GitHub" => "https://github.com/carterapp/exsftpd"}
     ]
   end
