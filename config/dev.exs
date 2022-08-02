@@ -5,6 +5,7 @@ config :exsftpd, Exsftpd.Server,
   # root dir for <username>: /tmp/users/<username>/files
   user_root_dir: fn user -> "/tmp/users/#{user}/files" end,
   # look for authorized_keys at /tmp/users/<username>/.ssh
+  key_module: Exsftpd.KeyMaster,
   user_auth_dir: "/Users/",
   # Where to look for ssh host keys
   system_dir: "/tmp/ssh",

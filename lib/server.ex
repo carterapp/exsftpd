@@ -125,6 +125,13 @@ defmodule Exsftpd.Server do
         handler -> Keyword.put(daemon_opts, :pwdfun, authenticate(handler))
       end
 
+    daemon_opts =
+      case options[:key_module] do
+        nil -> daemon_opts
+        module -> Keyword.put(daemon_opts, :key_cb, module)
+      end
+
+
     case :ssh.daemon(options[:port], daemon_opts) do
       {:ok, pid} ->
         ref = Process.monitor(pid)
