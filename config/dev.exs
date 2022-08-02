@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 config :exsftpd, Exsftpd.Server,
   port: 2222,
