@@ -102,6 +102,14 @@ defmodule Exsftpd.Server do
     end
   end
 
+  defp put_if(list, input, key, value_fn) do
+    if input do
+      Keyword.put(list, key, value_fn.(input))
+    else
+      list
+    end
+  end
+
   defp init_daemon(options) do
     Logger.info("Starting SFTP daemon on #{options[:port]}")
 
@@ -120,17 +128,10 @@ defmodule Exsftpd.Server do
     ]
 
     daemon_opts =
-      case options[:authenticate] do
-        nil -> daemon_opts
-        handler -> Keyword.put(daemon_opts, :pwdfun, authenticate(handler))
-      end
-
-    daemon_opts =
-      case options[:key_module] do
-        nil -> daemon_opts
-        module -> Keyword.put(daemon_opts, :key_cb, module)
-      end
-
+      daemon_opts
+      |> put_if(options[:authenticate], :pwdfun, &authenticate/1)
+      |> put_if(options[:key_module], :key_cb, fn m -> m end)
+      |> put_if(options[:modify_algoritms], :modify_algoritms, fn m -> m || [] end)
 
     case :ssh.daemon(options[:port], daemon_opts) do
       {:ok, pid} ->
