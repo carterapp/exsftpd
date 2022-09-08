@@ -131,7 +131,7 @@ defmodule Exsftpd.Server do
       daemon_opts
       |> put_if(options[:authenticate], :pwdfun, &authenticate/1)
       |> put_if(options[:key_module], :key_cb, fn m -> m end)
-      |> put_if(options[:modify_algoritms], :modify_algoritms, fn m -> m || [] end)
+      |> put_if(options[:modify_algorithms], :modify_algorithms, fn m -> m || [] end)
 
     case :ssh.daemon(options[:port], daemon_opts) do
       {:ok, pid} ->

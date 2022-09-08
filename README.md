@@ -29,6 +29,11 @@ config :exsftpd, Exsftpd.Server,
   #Where to look for ssh host keys
   system_dir: "/tmp/ssh",
   event_handler: fn(event) -> IO.puts("Event: #{inspect event} ") end
+  # If you need to support legacy encryption algorithms
+  modify_algorithms: [
+    prepend: [kex: [:"diffie-hellman-group1-sha1", :"diffie-hellman-group-exchange-sha1"]],
+    prepend: [public_key: [:"ssh-rsa", :"ssh-dss"]]
+  ]
 
 ```
 
