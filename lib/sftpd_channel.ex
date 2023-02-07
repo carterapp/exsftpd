@@ -4,8 +4,25 @@ defmodule Exsftpd.SftpdChannel do
   require Logger
   require Record
 
-  Record.defrecord(:state, Record.extract(:state, from_lib: "ssh/src/ssh_sftpd.erl"))
-  Record.defrecord(:ssh_xfer, Record.extract(:ssh_xfer, from_lib: "ssh/src/ssh_xfer.erl"))
+  Record.defrecord(:state, [
+    xf: :undefined,
+    cwd: :undefined,
+    root: :undefined,
+    remote_channel: :undefined,
+    pending: :undefined,
+    file_handler: :undefined,
+    file_state: :undefined,
+    max_files: :undefined,
+    options: :undefined,
+    handles: :undefined
+  ])
+
+  Record.defrecord(:ssh_xfer, [
+    vsn: :undefined,
+    ext: :undefined,
+    cm: :undefined,
+    channel: :undefined
+  ])
 
   def subsystem_spec(options) do
     {'sftp', {Exsftpd.SftpdChannel, options}}
