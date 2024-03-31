@@ -16,7 +16,7 @@ defmodule Exsftpd.SftpFileHandler do
     result
   end
 
-  defp get_file_info(io_device) do
+  defp pid2name(io_device) when is_pid(io_device) do
     # This function has code ported from the deprecated Erlang function :file.pid2name.
 
     ref = Process.monitor(io_device)
@@ -24,15 +24,22 @@ defmodule Exsftpd.SftpFileHandler do
     send(io_device, {:file_request, self(), ref, :pid2name})
 
     receive do
-      {:file_reply, ref, result} ->
+      {:file_reply, ref, reply} ->
         Process.demonitor(ref, [:flush])
-        {io_device, result}
+        reply
 
       {"DOWN", _ref, _, _, _} ->
-        {io_device}
+        {:error, :terminated}
     after
       500 ->
-        {io_device}
+        {:error, :timeout}
+    end
+  end
+
+  defp get_file_info(io_device) do
+    case pid2name(io_device) do
+      {:ok, filename} -> {io_device, filename}
+      _ -> {io_device}
     end
   end
 
