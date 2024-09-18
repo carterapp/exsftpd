@@ -121,7 +121,7 @@ defmodule Exsftpd.Server do
           file_handler:
             {Exsftpd.SftpFileHandler,
              [event_handler: options[:event_handler], user_root_dir: user_root_dir(options)]},
-          cwd: '/'
+          cwd: ~c"/"
         )
       ],
       user_dir_fun: user_auth_dir(options)

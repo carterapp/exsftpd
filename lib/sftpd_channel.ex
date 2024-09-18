@@ -25,7 +25,7 @@ defmodule Exsftpd.SftpdChannel do
   ])
 
   def subsystem_spec(options) do
-    {'sftp', {Exsftpd.SftpdChannel, options}}
+    {~c"sftp", {Exsftpd.SftpdChannel, options}}
   end
 
   def init(options) do
